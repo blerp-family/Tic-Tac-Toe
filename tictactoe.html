@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>100x100 Tic Tac Toe AI</title>
+  <title>25x25 Tic Tac Toe AI</title>
   <style>
     body {
       font-family: sans-serif;
@@ -40,8 +40,8 @@
   <button class="restart-btn" onclick="restartGame()">Restart Game</button>
 
   <script>
-    const SIZE = 100;
-    const WIN_CONDITION = 25;
+    const SIZE = 25;
+    const WIN_CONDITION = 11;
     let board = Array.from({ length: SIZE }, () => Array(SIZE).fill(null));
     const table = document.getElementById("board");
     const status = document.getElementById("status");
