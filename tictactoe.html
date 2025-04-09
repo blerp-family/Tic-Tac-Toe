@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>5x5 Tic Tac Toe Smart AI</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 40px;
+    }
+    table {
+      border-collapse: collapse;
+    }
+    td {
+      width: 60px;
+      height: 60px;
+      text-align: center;
+      vertical-align: middle;
+      font-size: 30px;
+      border: 1px solid black;
+    }
+    .status {
+      margin: 20px;
+      font-size: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="status" id="status">Game in progress...</div>
+  <table id="board"></table>
+
+  <script>
+    const SIZE = 5;
+    const WIN_CONDITION = 4;
+    let board = Array.from({ length: SIZE }, () => Array(SIZE).fill(null));
+    const table = document.getElementById("board");
+    const status = document.getElementById("status");
+
+    const AI_X = 'X';
+    const AI_O = 'O';
+
+    function createBoardUI() {
+      for (let row = 0; row < SIZE; row++) {
+        const tr = document.createElement("tr");
+        for (let col = 0; col < SIZE; col++) {
+          const td = document.createElement("td");
+          td.id = `cell-${row}-${col}`;
+          tr.appendChild(td);
+        }
+        table.appendChild(tr);
+      }
+    }
+
+    function renderBoard() {
+      for (let r = 0; r < SIZE; r++) {
+        for (let c = 0; c < SIZE; c++) {
+          document.getElementById(`cell-${r}-${c}`).textContent = board[r][c] || '';
+        }
+      }
+    }
+
+    function isWinning(board, player) {
+      const inARow = WIN_CONDITION;
+      for (let r = 0; r < SIZE; r++) {
+        for (let c = 0; c < SIZE; c++) {
+          if (
+            c + inARow <= SIZE &&
+            board[r].slice(c, c + inARow).every(cell => cell === player)
+          ) return true;
+
+          if (
+            r + inARow <= SIZE &&
+            board.slice(r, r + inARow).every(row => row[c] === player)
+          ) return true;
+
+          if (
+            r + inARow <= SIZE &&
+            c + inARow <= SIZE &&
+            Array.from({ length: inARow }, (_, i) => board[r + i][c + i]).every(cell => cell === player)
+          ) return true;
+
+          if (
+            r + inARow <= SIZE &&
+            c - inARow + 1 >= 0 &&
+            Array.from({ length: inARow }, (_, i) => board[r + i][c - i]).every(cell => cell === player)
+          ) return true;
+        }
+      }
+      return false;
+    }
+
+    function getAvailableMoves(board) {
+      const moves = [];
+      for (let r = 0; r < SIZE; r++) {
+        for (let c = 0; c < SIZE; c++) {
+          if (!board[r][c]) moves.push([r, c]);
+        }
+      }
+      return moves;
+    }
+
+    function cloneBoard(board) {
+      return board.map(row => row.slice());
+    }
+
+    function countImmediateWins(board, player) {
+      const avail = getAvailableMoves(board);
+      let count = 0;
+      const winningMoves = [];
+      for (const [r, c] of avail) {
+        const copy = cloneBoard(board);
+        copy[r][c] = player;
+        if (isWinning(copy, player)) {
+          count++;
+          winningMoves.push([r, c]);
+        }
+      }
+      return { count, winningMoves };
+    }
+
+    function getMostFrequentMove(moves) {
+      const freqMap = new Map();
+      for (const move of moves) {
+        const key = move.join(',');
+        freqMap.set(key, (freqMap.get(key) || 0) + 1);
+      }
+      let bestMove = null;
+      let maxCount = -1;
+      for (const [key, count] of freqMap.entries()) {
+        if (count > maxCount) {
+          maxCount = count;
+          bestMove = key.split(',').map(Number);
+        }
+      }
+      return bestMove;
+    }
+
+    function pickMonteCarloMove(board, player, trials = 25) {
+      const available = getAvailableMoves(board);
+      const sampledMoves = [];
+      for (let i = 0; i < trials; i++) {
+        const randIndex = Math.floor(Math.random() * available.length);
+        sampledMoves.push(available[randIndex]);
+      }
+      return getMostFrequentMove(sampledMoves);
+    }
+
+    async function playAI(player) {
+      const opponent = player === AI_X ? AI_O : AI_X;
+
+      // 1. Can AI win now?
+      const { count: myWins, winningMoves: myWinningMoves } = countImmediateWins(board, player);
+      if (myWins >= 1) {
+        board[myWinningMoves[0][0]][myWinningMoves[0][1]] = player;
+        renderBoard();
+        await new Promise(r => setTimeout(r, 300));
+        status.textContent = `Player ${player} wins!`;
+        return;
+      }
+
+      // 2. Can opponent win in one? Block if there's exactly 1 threat
+      const { count: theirWins, winningMoves: threatMoves } = countImmediateWins(board, opponent);
+      let move;
+      if (theirWins === 1) {
+        move = threatMoves[0]; // block
+      } else {
+        move = pickMonteCarloMove(board, player, 25);
+      }
+
+      if (move) {
+        board[move[0]][move[1]] = player;
+        renderBoard();
+        await new Promise(r => setTimeout(r, 300));
+        if (isWinning(board, player)) {
+          status.textContent = `Player ${player} wins!`;
+          return;
+        } else if (getAvailableMoves(board).length === 0) {
+          status.textContent = `Draw!`;
+          return;
+        }
+        playAI(opponent);
+      }
+    }
+
+    createBoardUI();
+    renderBoard();
+    playAI(AI_X);
+  </script>
+</body>
+</html>
