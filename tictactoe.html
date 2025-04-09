@@ -40,8 +40,8 @@
   <button class="restart-btn" onclick="restartGame()">Restart Game</button>
 
   <script>
-    const SIZE = 10;
-    const WIN_CONDITION = 5;
+    const SIZE = 100;
+    const WIN_CONDITION = 25;
     let board = Array.from({ length: SIZE }, () => Array(SIZE).fill(null));
     const table = document.getElementById("board");
     const status = document.getElementById("status");
