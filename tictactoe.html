@@ -2,39 +2,46 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>5x5 Tic Tac Toe Smart AI</title>
+  <title>10x10 Tic Tac Toe AI</title>
   <style>
     body {
       font-family: sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin-top: 40px;
+      margin-top: 30px;
     }
     table {
       border-collapse: collapse;
+      margin-bottom: 20px;
     }
     td {
-      width: 60px;
-      height: 60px;
+      width: 40px;
+      height: 40px;
       text-align: center;
       vertical-align: middle;
-      font-size: 30px;
+      font-size: 20px;
       border: 1px solid black;
     }
     .status {
-      margin: 20px;
-      font-size: 20px;
+      margin: 10px;
+      font-size: 18px;
+    }
+    .restart-btn {
+      padding: 8px 15px;
+      font-size: 16px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
   <div class="status" id="status">Game in progress...</div>
   <table id="board"></table>
+  <button class="restart-btn" onclick="restartGame()">Restart Game</button>
 
   <script>
-    const SIZE = 5;
-    const WIN_CONDITION = 4;
+    const SIZE = 10;
+    const WIN_CONDITION = 5;
     let board = Array.from({ length: SIZE }, () => Array(SIZE).fill(null));
     const table = document.getElementById("board");
     const status = document.getElementById("status");
@@ -148,24 +155,26 @@
       return getMostFrequentMove(sampledMoves);
     }
 
+    function restartGame() {
+      location.reload();
+    }
+
     async function playAI(player) {
       const opponent = player === AI_X ? AI_O : AI_X;
 
-      // 1. Can AI win now?
       const { count: myWins, winningMoves: myWinningMoves } = countImmediateWins(board, player);
       if (myWins >= 1) {
         board[myWinningMoves[0][0]][myWinningMoves[0][1]] = player;
         renderBoard();
-        await new Promise(r => setTimeout(r, 300));
+        await new Promise(r => setTimeout(r, 100));
         status.textContent = `Player ${player} wins!`;
         return;
       }
 
-      // 2. Can opponent win in one? Block if there's exactly 1 threat
       const { count: theirWins, winningMoves: threatMoves } = countImmediateWins(board, opponent);
       let move;
       if (theirWins === 1) {
-        move = threatMoves[0]; // block
+        move = threatMoves[0];
       } else {
         move = pickMonteCarloMove(board, player, 25);
       }
@@ -173,7 +182,7 @@
       if (move) {
         board[move[0]][move[1]] = player;
         renderBoard();
-        await new Promise(r => setTimeout(r, 300));
+        await new Promise(r => setTimeout(r, 100));
         if (isWinning(board, player)) {
           status.textContent = `Player ${player} wins!`;
           return;
